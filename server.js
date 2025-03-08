@@ -19,7 +19,10 @@ app.get('/elon-net-worth-forbes', async (req, res) => {
         });
         const page = await browser.newPage();
 
-        // Optimize: Disable unnecessary resources
+        // Set User-Agent to spoof a real browser
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+        // Optimize: Block unnecessary resources
         await page.setRequestInterception(true);
         page.on('request', (req) => {
             if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
@@ -29,9 +32,9 @@ app.get('/elon-net-worth-forbes', async (req, res) => {
             }
         });
 
-        // Increase timeout to 60 seconds
+        // Navigate with increased timeout
         await page.goto('https://www.forbes.com/profile/elon-musk/?list=rtb/', {
-            waitUntil: 'domcontentloaded', // Faster than 'networkidle2'
+            waitUntil: 'domcontentloaded',
             timeout: 60000 // 60 seconds
         });
 
@@ -46,7 +49,7 @@ app.get('/elon-net-worth-forbes', async (req, res) => {
         res.json({ netWorth });
     } catch (error) {
         console.error('Scraping error:', error);
-        if (browser) await browser.close(); // Ensure cleanup
+        if (browser) await browser.close();
         res.json({ netWorth: 343000000000 }); // Fallback
     }
 });

@@ -11,18 +11,18 @@ app.use(cors());
 app.get('/elon-net-worth-forbes', async (req, res) => {
     let browser;
     try {
+        console.log('Launching Puppeteer...');
         browser = await puppeteer.launch({
             args: chromium.args,
             defaultViewport: chromium.defaultViewport,
             executablePath: await chromium.executablePath(),
             headless: chromium.headless
         });
-        const page = await browser.newPage();
+        console.log('Browser launched successfully');
 
-        // Set User-Agent to spoof a real browser
+        const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
 
-        // Optimize: Block unnecessary resources
         await page.setRequestInterception(true);
         page.on('request', (req) => {
             if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
@@ -32,14 +32,13 @@ app.get('/elon-net-worth-forbes', async (req, res) => {
             }
         });
 
-        // Navigate with increased timeout
         await page.goto('https://www.forbes.com/profile/elon-musk/?list=rtb/', {
             waitUntil: 'domcontentloaded',
-            timeout: 60000 // 60 seconds
+            timeout: 60000
         });
 
         const netWorthText = await page.evaluate(() => {
-            const netWorthElement = document.querySelector('.subheader-amount');
+            const netWorthElement = document.querySelector('.profile-info__item-value');
             return netWorthElement ? netWorthElement.textContent.trim() : '$343B';
         });
 
@@ -48,9 +47,9 @@ app.get('/elon-net-worth-forbes', async (req, res) => {
         const netWorth = netWorthText.includes('B') ? netWorthValue * 1e9 : netWorthValue * 1e6;
         res.json({ netWorth });
     } catch (error) {
-        console.error('Scraping error:', error);
+        console.error('Scraping error details:', error.stack);
         if (browser) await browser.close();
-        res.json({ netWorth: 343000000000 }); // Fallback
+        res.json({ netWorth: 343000000000 });
     }
 });
 

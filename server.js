@@ -3,13 +3,16 @@ const puppeteer = require('puppeteer');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000; // Render default port
 
 app.use(cors());
 
 app.get('/elon-net-worth-forbes', async (req, res) => {
     try {
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+        const browser = await puppeteer.launch({ 
+            headless: true, 
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        });
         const page = await browser.newPage();
         await page.goto('https://www.forbes.com/profile/elon-musk/?list=rtb/', { waitUntil: 'networkidle2' });
         const netWorthText = await page.evaluate(() => {
@@ -22,7 +25,7 @@ app.get('/elon-net-worth-forbes', async (req, res) => {
         res.json({ netWorth });
     } catch (error) {
         console.error('Scraping error:', error);
-        res.json({ netWorth: 343000000000 });
+        res.json({ netWorth: 343000000000 }); // Fallback
     }
 });
 

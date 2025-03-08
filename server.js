@@ -1,5 +1,6 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const cors = require('cors');
 
 const app = express();
@@ -9,9 +10,11 @@ app.use(cors());
 
 app.get('/elon-net-worth-forbes', async (req, res) => {
     try {
-        const browser = await puppeteer.launch({ 
-            headless: true, 
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        const browser = await puppeteer.launch({
+            args: chromium.args, // Default args for cloud compatibility
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath(), // Auto-resolves Chromium path
+            headless: chromium.headless // Ensures headless mode
         });
         const page = await browser.newPage();
         await page.goto('https://www.forbes.com/profile/elon-musk/?list=rtb/', { waitUntil: 'networkidle2' });
